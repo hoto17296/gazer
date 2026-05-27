@@ -1,9 +1,11 @@
 import type { FC } from "react";
 
+import { MotionDetector } from "./components/MotionDetector";
+
 interface AppProps {}
 
 const App: FC<AppProps> = () => {
-  return <p>OK</p>;
+  return <MotionDetector />;
 };
 
 export default App;

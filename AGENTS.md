@@ -97,6 +97,28 @@ bun run build   # tsc -b && vite build → dist/ に出力
 - **Strict モード**有効（`noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`）
 - 未使用変数・未使用パラメータはコンパイルエラーになる
 
+### React コンポーネントの書き方
+
+Props をインタフェースとして定義し、`FC<Props>` で型を明示する。
+
+```tsx
+import type { FC } from "react";
+
+interface MyComponentProps {
+  label: string;
+}
+
+const MyComponent: FC<MyComponentProps> = ({ label }) => {
+  return <p>{label}</p>;
+};
+
+export default MyComponent;
+```
+
+- Props がない場合も `interface XxxProps {}` を定義して `FC<XxxProps>` と書く
+- `export` は `const` の前ではなく末尾に付けてもよい（`default export` の場合は末尾）
+- 名前付き export の場合は `export const MyComponent: FC<...>` と宣言部でつける
+
 ### Linting（OXLint）
 
 設定ファイル: [app/.oxlintrc.json](app/.oxlintrc.json)
