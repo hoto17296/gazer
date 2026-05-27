@@ -1,0 +1,20 @@
+:root {
+  --color-primary-rgb: 0, 91, 93;
+  --color-primary: rgb(var(--color-primary-rgb));
+  --color-primary-hover-rgb: 0, 150, 153;
+  --color-primary-hover: rgb(var(--color-primary-hover-rgb));
+  --color-secondary-rgb: 196, 0, 154;
+  --color-secondary: rgb(var(--color-secondary-rgb));
+  --color-focus-rgb: 64, 150, 255;
+  --color-focus: rgb(var(--color-focus-rgb));
+  --color-danger: #c00;
+  --color-note: #999;
+  --color-message-assistant: var(--color-primary);
+  --color-message-user: var(--color-secondary);
+  font-family: sans-serif;
+  color: #333;
+}
+
+body {
+  background-color: #eee;
+}

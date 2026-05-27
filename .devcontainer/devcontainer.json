@@ -1,0 +1,13 @@
+{
+  "name": "gazer",
+  "dockerComposeFile": ["compose.yaml"],
+  "service": "workspace",
+  "workspaceFolder": "/workspace",
+  "forwardPorts": [5173],
+  "postCreateCommand": "bun install --cwd app",
+  "customizations": {
+    "vscode": {
+      "extensions": ["anthropic.claude-code", "oxc.oxc-vscode"]
+    }
+  }
+}

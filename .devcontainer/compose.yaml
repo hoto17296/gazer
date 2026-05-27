@@ -1,0 +1,10 @@
+services:
+  workspace:
+    build: .
+    command: sleep infinity
+    volumes:
+      - ..:/workspace
+      - home:/root:delegated
+
+volumes:
+  home:
