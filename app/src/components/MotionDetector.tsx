@@ -6,8 +6,22 @@ import styles from "./MotionDetector.module.css";
 
 interface MotionDetectorProps {}
 
+// smoothedCentroid (0..1) → translate オフセット (vw/vh)。x は映像ミラーに合わせて反転
+function toStyle(
+  c: { x: number; y: number },
+  scaleX: number,
+  scaleY: number,
+): { transform: string } {
+  const x = -(c.x - 0.5) * scaleX;
+  const y = (c.y - 0.5) * scaleY;
+  return { transform: `translate(calc(-50% + ${x}vw), calc(-50% + ${y}vh))` };
+}
+
 export const MotionDetector: FC<MotionDetectorProps> = () => {
   const { videoRef, overlayRef, motion, error } = useMotionDetection();
+  const c = motion.smoothedCentroid;
+  const eyeStyle = toStyle(c, 40, 10);
+  const mouthStyle = toStyle(c, 20, 4);
 
   if (error) {
     return (
@@ -23,6 +37,18 @@ export const MotionDetector: FC<MotionDetectorProps> = () => {
       <div className={styles.videoWrap}>
         <video ref={videoRef} muted playsInline />
         <canvas ref={overlayRef} width={640} height={360} />
+        <div
+          className={`${styles.eye} ${styles.eyeLeft}${motion.isMoving ? ` ${styles.eyeActive}` : ""}`}
+          style={eyeStyle}
+        />
+        <div
+          className={`${styles.eye} ${styles.eyeRight}${motion.isMoving ? ` ${styles.eyeActive}` : ""}`}
+          style={eyeStyle}
+        />
+        <div
+          className={`${styles.mouth}${motion.isMoving ? ` ${styles.mouthOpen}` : ""}`}
+          style={mouthStyle}
+        />
         {motion.isMoving && <div className={styles.motionBadge}>動き検出中</div>}
       </div>
       <div className={styles.statusBar}>

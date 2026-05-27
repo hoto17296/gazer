@@ -28,6 +28,60 @@
   transform: scaleX(-1);
 }
 
+.eye {
+  position: absolute;
+  top: 40%;
+  background: #fff;
+  pointer-events: none;
+  /* 動きなし: 細長い横長（眠そうに細めた状態） */
+  width: 8vmin;
+  height: 2vmin;
+  border-radius: 0;
+  /* transform はインラインスタイルで設定（translate(-50%,-50%) + 視線オフセット） */
+  /* 位置の滑らかさは RAF ループの lerp に委ねるため transform は transition しない */
+  transition:
+    width 0.3s ease,
+    height 0.3s ease,
+    border-radius 0.3s ease;
+}
+
+.eyeLeft {
+  left: 30%;
+}
+
+.eyeRight {
+  left: 70%;
+}
+
+.eyeActive {
+  /* 動きあり: 丸（目を見開いた状態） */
+  width: 5vmin;
+  height: 5vmin;
+  border-radius: 50%;
+}
+
+.mouth {
+  position: absolute;
+  top: 70%;
+  left: 50%;
+  background: transparent;
+  border: 12px solid #fff;
+  pointer-events: none;
+  /* 動きなし: 横棒（口を閉じた状態） */
+  width: 24vw;
+  height: 0;
+  /* transform はインラインスタイルで設定（translate(-50%,-50%) + 視線オフセット） */
+  transition:
+    width 0.3s ease,
+    height 0.3s ease;
+}
+
+.mouthOpen {
+  /* 動きあり: 口が開く */
+  width: 20vw;
+  height: 16vmin;
+}
+
 .motionBadge {
   position: absolute;
   top: 12px;
@@ -61,7 +115,9 @@
   border-radius: 50%;
   background: #444;
   flex-shrink: 0;
-  transition: background 0.15s, box-shadow 0.15s;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s;
 }
 
 .statusDotOn {

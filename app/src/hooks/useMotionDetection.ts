@@ -7,11 +7,16 @@ const H = 90;
 const THRESHOLD = 25;
 // Fraction of pixels that must be in motion before we declare isMoving=true
 const RATIO_MIN = 0.005;
+// isMoving=true をこの時間 (ms) 維持する — 単発フレームのチラつきを防ぐ
+const HOLD_MS = 800;
+// 重心の指数平滑化速度 — 値が大きいほど追従が速い (exponential decay constant, per second)
+const CENTROID_LERP_SPEED = 2;
 
 export type Motion = {
   isMoving: boolean;
-  centroid: { x: number; y: number } | null; // normalized 0..1
+  centroid: { x: number; y: number } | null; // normalized 0..1, hold あり
   ratio: number; // fraction of pixels in motion
+  smoothedCentroid: { x: number; y: number }; // 重心を指数平滑化した値 (動きなし時は中心 0.5 へ収束)
 };
 
 type InternalRefs = {
@@ -28,11 +33,16 @@ export function useMotionDetection() {
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
   const internals = useRef<InternalRefs | null>(null);
+  const lastMotionTimeRef = useRef<number>(0);
+  const lastCentroidRef = useRef<{ x: number; y: number } | null>(null);
+  const smoothedCentroidRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
+  const lastTickTimeRef = useRef<number>(0);
 
   const [motion, setMotion] = useState<Motion>({
     isMoving: false,
     centroid: null,
     ratio: 0,
+    smoothedCentroid: { x: 0.5, y: 0.5 },
   });
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -93,6 +103,11 @@ export function useMotionDetection() {
   const tick = useCallback(() => {
     rafRef.current = requestAnimationFrame(tick);
 
+    const now = performance.now();
+    // フレームレート非依存の dt (最大 100ms でクランプしてスパイクを防ぐ)
+    const dt = Math.min((now - lastTickTimeRef.current) / 1000, 0.1);
+    lastTickTimeRef.current = now;
+
     const video = videoRef.current;
     const overlay = overlayRef.current;
     const r = internals.current;
@@ -143,8 +158,19 @@ export function useMotionDetection() {
       overlayCtx.drawImage(motionCanvas, 0, 0, overlay.width, overlay.height);
 
       const ratio = count / (W * H);
-      const isMoving = ratio > RATIO_MIN;
-      const centroid = isMoving && sumW > 0 ? { x: sumX / sumW / W, y: sumY / sumW / H } : null;
+      if (ratio > RATIO_MIN) {
+        lastMotionTimeRef.current = now;
+        if (sumW > 0) lastCentroidRef.current = { x: sumX / sumW / W, y: sumY / sumW / H };
+      }
+      const isMoving = now - lastMotionTimeRef.current < HOLD_MS;
+      // hold 期間中は最後に検知した重心を維持する
+      const centroid = isMoving ? lastCentroidRef.current : null;
+
+      // 重心を指数平滑化でターゲットへ近づける (動きなし時は中心へ収束)
+      const target = centroid ?? { x: 0.5, y: 0.5 };
+      const alpha = 1 - Math.exp(-CENTROID_LERP_SPEED * dt);
+      smoothedCentroidRef.current.x += (target.x - smoothedCentroidRef.current.x) * alpha;
+      smoothedCentroidRef.current.y += (target.y - smoothedCentroidRef.current.y) * alpha;
 
       if (centroid) {
         const cx = centroid.x * overlay.width;
@@ -162,7 +188,12 @@ export function useMotionDetection() {
         overlayCtx.stroke();
       }
 
-      setMotion({ isMoving, centroid, ratio });
+      setMotion({
+        isMoving,
+        centroid,
+        ratio,
+        smoothedCentroid: { ...smoothedCentroidRef.current },
+      });
     }
 
     prevBuf.set(curr);
